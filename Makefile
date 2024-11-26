@@ -18,5 +18,6 @@ src/request_handler.o: src/request_handler.c include/request_handler.h include/r
 src/response.o: src/response.c include/response.h
 	$(CC) $(CFLAGS) -c src/response.c -o src/response.o
 
+.PHONY: clean
 clean:
 	rm -f server src/*.o
