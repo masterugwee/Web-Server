@@ -3,10 +3,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/wait.h>
 #include "server.h"
 #include "request_handler.h"
 
-#define PORT 1337
+#define PORT 8080
 #define BACKLOG 10
 
 void start_server() {
@@ -37,15 +38,27 @@ void start_server() {
 
     printf("Server started on port %d\n", PORT);
 
-    while ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) >= 0) {
-        handle_request(new_socket);
-        close(new_socket);
-    }
+    while (1) {
+        new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
+        if (new_socket < 0) {
+            perror("accept");
+            continue;
+        }
 
-    if (new_socket < 0) {
-        perror("accept");
-        close(server_fd);
-        exit(EXIT_FAILURE);
+        pid_t pid = fork();
+        if (pid == 0) {
+            // Child process
+            close(server_fd);
+            handle_request(new_socket);
+            close(new_socket);
+            exit(0);
+        } else if (pid < 0) {
+            perror("fork");
+        } else {
+            // Parent process
+            close(new_socket);
+            waitpid(-1, NULL, WNOHANG);  // Clean up zombie processes
+        }
     }
 
     close(server_fd);
