@@ -7,8 +7,7 @@
 #include "response.h"
 
 void handle_request(int client_socket) {
-    char buffer[1024] = {0};
-    char method[16], path[256];
+    char buffer[1024] = {0}, method[16], path[256];
 
     read(client_socket, buffer, sizeof(buffer));
     parse_request(buffer, method, path);

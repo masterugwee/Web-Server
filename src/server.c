@@ -7,7 +7,7 @@
 #include "server.h"
 #include "request_handler.h"
 
-#define PORT 8080
+#define PORT 1337
 #define BACKLOG 10
 
 void start_server() {
