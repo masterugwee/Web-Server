@@ -4,7 +4,6 @@
 This project demonstrates how to build a basic HTTP server in C that handles GET, POST, PUT requests. It aims to teach the fundamentals of HTTP and server-side programming. ## Features - Handles multiple simultaneous connections using `fork()`. - Supports basic HTTP methods: GET, POST, PUT. - Serves static files from a specified directory. - Simple request parsing and response generation. 
 
 ## Project Structure
-Project Structure
 
 ```
 Web-Server
@@ -54,12 +53,13 @@ To run the server, execute:
 The server will start on port 1337 and serve files from the web/ directory.
 
 ## Example Requests
+### GET Request
+
 ```http
-GET Request
 GET /index.html HTTP/1.0
 Host: example.com
 ```
-## Response:
+### Response:
 
 ```http
 HTTP/1.0 200 OK
@@ -69,7 +69,7 @@ Content-Length: 39
 <html><body>Hello, World!</body></html>
 ```
 
-## POST Request
+### POST Request
 
 ```http
 POST /submit HTTP/1.0
@@ -78,7 +78,7 @@ Content-Length: 13
 
 name=example
 ```
-## Response:
+### Response:
 
 ```http
 HTTP/1.0 200 OK
@@ -88,7 +88,7 @@ Content-Length: 53
 <html><body>Received POST data: name=example</body></html>
 ```
 
-## PUT Request
+### PUT Request
 
 ```http
 PUT /update HTTP/1.0
@@ -98,7 +98,7 @@ Content-Length: 13
 name=example
 ```
 
-## Response:
+### Response:
 
 ```http
 HTTP/1.0 200 OK
@@ -109,8 +109,8 @@ Content-Length: 53
 ```
 
 
-Adding Concurrency
+## Adding Concurrency
 The server uses fork() to handle multiple simultaneous client connections, making it capable of serving multiple requests at the same time.
 
-License
-[Your License Information Here](./LICENSE)
+## License
+[MIT](./LICENSE)
