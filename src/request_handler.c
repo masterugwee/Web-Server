@@ -6,6 +6,23 @@
 #include "request_handler.h"
 #include "response.h"
 
+
+int is_valid_content_type(const char* content_type)
+ { regex_t regex;
+  int reti;
+   // Compile regular expression for MIME type validation
+    reti = regcomp(&regex, "^(text|application|form)/(plain|data|html|css|javascript|json|x-www-form-urlencoded)$", REG_EXTENDED); 
+    if (reti) { return 0; // regex compilation failed 
+    } // Execute regular expression 
+    reti = regexec(&regex, content_type, 0, NULL, 0);
+    regfree(&regex); // Free compiled regular expression 
+    if (!reti) { return 1;
+     // valid content-type
+    }
+ return 0; // invalid content-type
+  }
+
+
 void handle_request(int client_socket) {
     char buffer[1024] = {0}, method[16], path[256], host[256] = {0}, content_type[64] = {0};
     int content_length = 0;
@@ -48,6 +65,9 @@ void handle_request(int client_socket) {
         send_response(client_socket, "405 Method Not Allowed", "text/plain", "Method not allowed");
     }
 }
+
+
+
 
 void parse_request_headers(const char* request, char* method, char* path, char* host, char* content_type, int* content_length) {
     sscanf(request, "%s %s", method, path);
