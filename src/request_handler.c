@@ -19,20 +19,27 @@ void handle_request(int client_socket) {
         return;
     }
 
+    // Validate the Content-Type for POST and PUT requests
+    if ((strcmp(method, "POST") == 0 || strcmp(method, "PUT") == 0) && !is_valid_content_type(content_type)) {
+        send_response(client_socket, "400 Bad Request", "text/plain", "Invalid Content-Type header");
+        return;
+    }
+
+    // Ensure Content-Length is present for POST and PUT
+    if ((strcmp(method, "POST") == 0 || strcmp(method, "PUT") == 0) && content_length <= 0) {
+        send_response(client_socket, "400 Bad Request", "text/plain", "Invalid Content-Length header");
+        return;
+    }
+
     if (strcmp(method, "GET") == 0) {
         serve_file(client_socket, path);
     } else if (strcmp(method, "POST") == 0 || strcmp(method, "PUT") == 0) {
-        // Ensure Content-Type and Content-Length are present for POST and PUT
-        if (strlen(content_type) == 0 || content_length == 0) {
-            send_response(client_socket, "400 Bad Request", "text/plain", "Missing Content-Type or Content-Length header");
-            return;
-        }
-        const char* body = extract_body(buffer);
+        const char* body = extract_body(buffer, content_length);
         if (body != NULL) {
             if (strcmp(method, "POST") == 0) {
                 handle_post(client_socket, path, body);
             } else if (strcmp(method, "PUT") == 0) {
-                handle_put(client_socket, path, body);
+                handle_put(client_socket, path, body, content_length);
             }
         } else {
             send_response(client_socket, "400 Bad Request", "text/plain", "Invalid request body");
@@ -91,13 +98,37 @@ void handle_post(int client_socket, const char* path, const char* body) {
     send_response(client_socket, "200 OK", "text/html; charset=UTF-8", response_body);
 }
 
-void handle_put(int client_socket, const char* path, const char* body) {
+void handle_put(int client_socket, const char* path, const char* body, int content_length) {
+    // Create the full file path
+    char full_path[512] = "./web";
+    strcat(full_path, path);
+
+    // Open or create the file
+    FILE* file = fopen(full_path, "w");
+    if (!file) {
+        send_response(client_socket, "500 Internal Server Error", "text/html; charset=UTF-8", "<html><body>500 Internal Server Error</body></html>");
+        return;
+    }
+
+    // Write the body content to the file
+    fwrite(body, 1, content_length, file);
+    fclose(file);
+
+    // Respond with a success message
     char response_body[1024];
-    snprintf(response_body, sizeof(response_body), "<html><body>Received PUT data: %s</body></html>", body);
+    snprintf(response_body, sizeof(response_body), "<html><body>Received PUT data and stored it in %s</body></html>", path);
     send_response(client_socket, "200 OK", "text/html; charset=UTF-8", response_body);
 }
 
-const char* extract_body(const char* request) {
-    const char* body = strstr(request, "\r\n\r\n");
-    return body ? body + 4 : NULL;
+const char* extract_body(const char* request, int content_length) {
+    const char* body_start = strstr(request, "\r\n\r\n");
+    if (!body_start) {
+        return NULL;
+    }
+    body_start += 4; // Skip the "\r\n\r\n"
+    // Ensure the body length matches the content length
+    if (strlen(body_start) != content_length) {
+        return NULL;
+    }
+    return body_start;
 }
